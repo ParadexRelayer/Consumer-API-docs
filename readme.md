@@ -1,11 +1,20 @@
 # Paradex Consumer API
 
 ## Contents
+[Sending Requests](#sending-requests)
+
 [Errors](#errors)
 
 [Misc](#misc)
 
 [Paradex Consumer API](#paradex-consumer-api)
+
+## Sending Requests
+
+To access the api you need to have a valid api key. Currently all endpoints require a valid api key which should be sent in the headers of every request
+```
+API-KEY: odxnkc39oenis239p88geuth4p7fkbic
+```
 
 
 ## Errors
@@ -185,7 +194,7 @@ Returns the order book for a given market. The orderbook representation merges o
 ## GET /v0/order/[orderId]
 `private endpoint`
 
-Returns information about the order identified by the orderId passed in the url. The user must be authenticated as the maker.
+Returns information about the order identified by the orderId passed in the url.
 
 ```
 {
@@ -225,7 +234,7 @@ Returns information about the order identified by the orderId passed in the url.
 ## GET /v0/order/[orderId]/trades
 `private endpoint`
 
-Returns trades and corresponding price adjustments connected with the order identified by the orderHash passed in the url. The user must be authenticated as the maker.
+Returns trades and corresponding price adjustments connected with the order identified by the orderHash passed in the url.
 ```
 [
     {
