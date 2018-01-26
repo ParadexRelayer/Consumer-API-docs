@@ -64,13 +64,40 @@ Another feature of ERC20 tokens is allowances. Allowances allow you to control h
 
 ## Errors
 
-| Code | Reason
-| ---- | --------------------------------------- |
-| 400  | Bad Request – Invalid request format    |
-| 404  | Not found                               |
-| 429  | Too many requests - Rate limit exceeded |
-| 500  | Internal Server Error                   |
-| 501  | Not Implemented                         |
+The consumer api will return a HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below. 
+
+```
+{
+    error: { 
+        code: 100,
+        reason: 'Validation Failed',
+        validationErrors: [ 
+            { field: 'id', code: 1000, reason: 'id is required' },
+            ...
+        ]
+    }
+}
+```
+All error responses have `code` and `reason` properties. Additionally validation errors contain an array of the fields that have failed validation while incorrect nonce errors return the current nonce. Here is a list of the consumer api error codes 
+
+| Error Code | Reason
+| ---------  | --------------------------- |
+|    100     | Validation failed           |
+|    101     | Malformed JSON              |
+|    104     | Invalid API key             |
+|    105     | Invalid ethereum address    |
+|    106     | Invalid signature           |
+|    107     | Invalid nonce               |
+|    108     | Server Error                |
+
+
+Aside from HTTP 200 responses the following HTTP error codes are used by the consumer api 
+
+| HTTP Code | Reason
+| --------- | -------------------------------------------- |
+|    404    | Url not found or request type not supported  |
+|    429    | Too many requests - Rate limit exceeded      |
+|    500    | Internal Server Error                        |
 
 ## Misc
 
