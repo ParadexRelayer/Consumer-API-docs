@@ -1,6 +1,8 @@
 # Paradex Consumer API
 
 ## Contents
+[API URLs](#api-urls)
+
 [Sending Requests](#sending-requests)
 
 [Errors](#errors)
@@ -9,6 +11,17 @@
 
 [Paradex Consumer API](#paradex-consumer-api)
 
+## API URLs
+### mainnet
+To access our mainnet instance use the following url as the base url for our endpoints.
+
+https://api.paradex.io/consumer
+
+### kovan
+As well as the mainnet version of the API Paradex has a kovan instance to allow for testing. The base url for our kovan instance is
+
+https://kovan-api.paradex.io/consumer
+
 ## Sending Requests
 
 To access the api you need to have a valid api key. Currently all endpoints require a valid api key which should be sent in the headers of every request
@@ -16,6 +29,38 @@ To access the api you need to have a valid api key. Currently all endpoints requ
 API-KEY: odxnkc39oenis239p88geuth4p7fkbic
 ```
 
+There are two types of endpoints in the Paradex Consumer API, `public` and `private`. While both require a valid api key, `private endpoints` return sensitive information pertaining to an ethereum account and have additional checks in place to ensure account security.
+
+All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-VRS header. A nonce is also included in the payload to ensure requests can't be harvested and resumbitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
+
+### Signing Requests
+
+Given the following POST parameters
+```
+{
+    "market": "REP/WETH"
+    "state": "all"
+    "nonce": 1234567
+}
+```
+
+We create a payload message by ordering the payload by the keys then concatinating the keys together followed by the values for those keys concatinated together. So for the above payload we would get the following payload message
+
+```
+marketnoncestateREP/WETH1234567all
+```
+
+This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the header of the request.
+
+
+## Deposits/Withdrawals
+
+Paradex is a non custodial decentralised trading platform. This means you retain complete control of your funds and they stay within your own wallet until a trade takes place. As such there is no way to deposit or withdraw funds to or from Paradex. Assets can be moved in and out of your wallet using the normal means at your disposal either programmatically or via an application. What you will need to do though is wrap Eth and set allowances. Please see below
+
+## Wrapping ETH and Setting Allowances
+
+Paradex enables the decentralised trading of ERC20 tokens. The ERC20 standard was created to provide a common interface for how tokens will function and was created after the initial Ethereum standard. As such Ethereum is not currently an ERC20 token and has to be converted to a compatible ERC20 Ethereum called Wrapped-ETH (WETH). Unsurprisingly this conversion process is called wrapping with 1 WETH being equivalent to 1 ETH in value.
+Another feature of ERC20 tokens is allowances. Allowances allow you to control how much if any of your funds can be transfered by out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0 so before you begin trading you have to set allowances for your tokens. Remember even once you have set your allowances no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting your allowances for that token your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
 
 ## Errors
 
@@ -117,6 +162,54 @@ Returns ticker data for a market
 
 
 
+## GET /v0/orderbook
+`public endpoint`
+
+Returns the order book for a given market. The orderbook representation merges orders of the same value to show the overall volume at each value.
+#### parameters
+* market - Symbol of a market
+```
+{
+    marketId: 1,
+    marketSymbol: 'REP/ETH',
+    bids:[
+        { 'amount': '300', 'price': '0.004' },
+        { 'amount': '440', 'price': '0.003' },
+        { 'amount': '500', 'price': '0.002' },
+        ...
+    ],
+    asks:[
+        { 'amount': '200', 'price': '0.005' },
+        { 'amount': '360', 'price': '0.006' },
+        { 'amount': '445', 'price': '0.007' },
+        ...
+    ]
+}
+```
+
+
+
+## POST /v0/fees
+`public endpoint`
+
+Get the fees for an order.
+#### parameters
+* market
+* orderType
+* price
+* amount
+* expirationDate
+
+Returns:
+```
+{ 
+    'baseFeeDecimal': '1.697552694864903098033668128',
+    'tradingFeeDecimal': '21.21940868581128872542085161',
+}
+```
+
+
+
 ## GET /v0/orders/
 `private endpoint`
 
@@ -164,35 +257,11 @@ Returns the user's orders
 ```
 
 
-
-## GET /v0/orderbook
-`public endpoint`
-
-Returns the order book for a given market. The orderbook representation merges orders of the same value to show the overall volume at each value.
-#### parameters
-* market - Symbol of a market
-```
-{
-    marketId: 1,
-    marketSymbol: 'REP/ETH',
-    bids:[
-        { 'amount': '300', 'price': '0.004' },
-        { 'amount': '440', 'price': '0.003' },
-        { 'amount': '500', 'price': '0.002' },
-        ...
-    ],
-    asks:[
-        { 'amount': '200', 'price': '0.005' },
-        { 'amount': '360', 'price': '0.006' },
-        { 'amount': '445', 'price': '0.007' },
-        ...
-    ]
-}
-```
-
-
-## GET /v0/order/[orderId]
+## POST /v0/viewOrder
 `private endpoint`
+
+#### parameters
+* id - id of the order to view
 
 Returns information about the order identified by the orderId passed in the url.
 
@@ -231,10 +300,13 @@ Returns information about the order identified by the orderId passed in the url.
 ```
 
 
-## GET /v0/order/[orderId]/trades
+## POST /v0/viewOrderTrades
 `private endpoint`
 
-Returns trades and corresponding price adjustments connected with the order identified by the orderHash passed in the url.
+#### parameters
+* id - id of the order whose trades you want to view
+
+Returns trades and corresponding price adjustments connected with the order identified by the orderId passed in the url.
 ```
 [
     {
@@ -294,7 +366,7 @@ Returns trades and corresponding price adjustments connected with the order iden
 
 
 
-## GET /v0/trades
+## POST /v0/trades
 `private endpoint`
 
 Returns the users trades.
@@ -360,12 +432,11 @@ Returns the users trades.
 
 
 
-## GET /v0/balances
+## POST /v0/balances
 `private endpoint`
 
 Returns the users balances.
-#### parameters
-* token - if no token set balances for all available currencies will be sent
+
 ```
 [
     {
@@ -377,26 +448,6 @@ Returns the users balances.
     }
     ...
 ]
-```
-
-
-## POST /v0/fees
-`public endpoint`
-
-Get the fees for an order.
-#### parameters
-* market
-* orderType
-* price
-* amount
-* expirationDate
-
-Returns:
-```
-{ 
-    'baseFeeDecimal': '1.697552694864903098033668128',
-    'tradingFeeDecimal': '21.21940868581128872542085161',
-}
 ```
 
 
@@ -479,7 +530,7 @@ Creates an order on the Paradex by posting a signed 0x compatible order. To get 
 
 cancels an order.
 #### parameters
-* orderId
+* id
 
 **Returns**
 ```
