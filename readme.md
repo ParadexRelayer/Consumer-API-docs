@@ -18,7 +18,7 @@ To access our mainnet instance use the following url as the base url for our end
 https://api.paradex.io/consumer
 
 ### kovan
-As well as the mainnet version of the API paradex has a kovan instance to allow for testing. The base url for our kovan instance is
+As well as the mainnet version of the API Paradex has a kovan instance to allow for testing. The base url for our kovan instance is
 
 https://kovan-api.paradex.io/consumer
 
@@ -29,7 +29,7 @@ To access the api you need to have a valid api key. Currently all endpoints requ
 API-KEY: odxnkc39oenis239p88geuth4p7fkbic
 ```
 
-There are two types of endpoints in the Paradex Consumer API, `public` and `private`. While both require a valid api key `private endpoints` return information pertaining to a ethereum account so have additional checks in place to ensure account security.
+There are two types of endpoints in the Paradex Consumer API, `public` and `private`. While both require a valid api key, `private endpoints` return sensitive information pertaining to an ethereum account and have additional checks in place to ensure account security.
 
 All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-VRS header. A nonce is also included in the payload to ensure requests can't be harvested and resumbitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
 
@@ -60,7 +60,7 @@ Paradex is a non custodial decentralised trading platform. This means you retain
 ## Wrapping ETH and Setting Allowances
 
 Paradex enables the decentralised trading of ERC20 tokens. The ERC20 standard was created to provide a common interface for how tokens will function and was created after the initial Ethereum standard. As such Ethereum is not currently an ERC20 token and has to be converted to a compatible ERC20 Ethereum called Wrapped-ETH (WETH). Unsurprisingly this conversion process is called wrapping with 1 WETH being equivalent to 1 ETH in value.
-Another feature of ERC20 tokens is allowances. Allowances allow you to control how much if any of your funds can be transfered by out of your wallet by Paradex. By default your allowances are set to 0 so before you begin trading you have to set allowances for your tokens. Remember even once you have set your allowances no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to paradex without setting your allowances for that token your order will enter an unfunded state. If you are wanting to set allowances programmatically the 0x.js library provides some convenience methods to help you do that https://www.0xproject.com/docs/0xjs#token
+Another feature of ERC20 tokens is allowances. Allowances allow you to control how much if any of your funds can be transfered by out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0 so before you begin trading you have to set allowances for your tokens. Remember even once you have set your allowances no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting your allowances for that token your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
 
 ## Errors
 
