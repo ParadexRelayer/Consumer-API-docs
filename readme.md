@@ -237,7 +237,7 @@ Returns:
 
 
 
-## GET /v0/orders/
+## POST /v0/orders/
 `private endpoint`
 
 Returns the user's orders
