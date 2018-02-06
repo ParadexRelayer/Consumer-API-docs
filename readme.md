@@ -217,7 +217,7 @@ Returns the order book for a given market. The orderbook representation merges o
 
 
 ## POST /v0/fees
-`public endpoint`
+`private endpoint`
 
 Get the fees for an order.
 #### parameters
