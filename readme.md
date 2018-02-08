@@ -31,16 +31,16 @@ API-KEY: odxnkc39oenis239p88geuth4p7fkbic
 
 There are two types of endpoints in the Paradex Consumer API, `public` and `private`. While both require a valid api key, `private endpoints` return sensitive information pertaining to an ethereum account and have additional checks in place to ensure account security.
 
-All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-VRS header. A nonce is also included in the payload to ensure requests can't be harvested and resumbitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
+All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-VRS header. A nonce is also included in the payload to ensure requests can't be harvested and resubmitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
 
 ### Signing Requests
 
 Given the following POST parameters
 ```
 {
-    "market": "REP/WETH"
-    "state": "all"
-    "nonce": 1234567
+    market: 'REP/WETH'
+    state: 'all'
+    nonce: 1234567
 }
 ```
 
@@ -49,8 +49,23 @@ We create a payload message by ordering the payload by the keys then concatinati
 ```
 marketnoncestateREP/WETH1234567all
 ```
+Please note this message does not contain "Ethereum Signed Message:" prefix and so cannot be signed using the eth_sign RPC call. This is not the case for the actual signing of the orders. To be compatible with the 0x contract the prefix should be included in the message that creates the order hash
 
-This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the header of the request.
+This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the API-VRS header of the request. The API-VRS is constructed by concatenating the r + s + v values together in that order. A typescript example of the signing process is included here as a referance 
+
+
+```
+import * as utils from "ethereumjs-util"
+
+let message = 'marketnoncestateREP/WETH1234567all';
+let privateKey = '0xabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca';
+
+let sha = utils.sha3(message);
+let signature = utils.ecsign(sha, utils.toBuffer(privateKey));
+let APIVRS = utils.toRpcSig(signature.v, signature.r, signature.s);
+```
+This produces the signature `0x38c20ccebd1f829538ec57ceec697ab88542dea62bcb64b4ae5733a4d46709747bd9b7da62e883eb462b5c8049bae336342f5f5d3f06fe94180c2fa3780e411000`
+
 
 
 ## Deposits/Withdrawals
@@ -107,7 +122,6 @@ Aside from HTTP 200 responses the following HTTP error codes are used by the con
 
 # Paradex Consumer API
 
-All endpoints are listed as either `public` or `private`. `private` endpoints require an API key.
 
 ## GET /v0/tokens
 `public endpoint`
@@ -137,10 +151,10 @@ Returns a list of markets:
         symbol: 'ZRX/WETH',
         baseToken: 'ZRX',
         quoteToken: 'WETH',
-        'minOrderSize': "0.001",
-        'maxOrderSize': "10000",
-        'priceMaxDecimals': 5,
-        'amountMaxDecimals': 6
+        minOrderSize: '0.001',
+        maxOrderSize: '10000',
+        priceMaxDecimals: 5,
+        amountMaxDecimals: 6
     },
     ...
 ]
@@ -200,15 +214,15 @@ Returns the order book for a given market. The orderbook representation merges o
     marketId: 1,
     marketSymbol: 'REP/ETH',
     bids:[
-        { 'amount': '300', 'price': '0.004' },
-        { 'amount': '440', 'price': '0.003' },
-        { 'amount': '500', 'price': '0.002' },
+        { amount: '300', price: '0.004' },
+        { amount: '440', price: '0.003' },
+        { amount: '500', price: '0.002' },
         ...
     ],
     asks:[
-        { 'amount': '200', 'price': '0.005' },
-        { 'amount': '360', 'price': '0.006' },
-        { 'amount': '445', 'price': '0.007' },
+        { amount: '200', price: '0.005' },
+        { amount: '360', price: '0.006' },
+        { amount: '445', price: '0.007' },
         ...
     ]
 }
@@ -230,21 +244,21 @@ Get the fees for an order.
 Returns:
 ```
 { 
-    'baseFeeDecimal': '1.697552694864903098033668128',
-    'tradingFeeDecimal': '21.21940868581128872542085161',
+    baseFeeDecimal: '1.697552694864903098033668128',
+    tradingFeeDecimal: '21.21940868581128872542085161',
 }
 ```
 
 
 
-## POST /v0/orders/
+## POST /v0/orders
 `private endpoint`
 
 Returns the user's orders
 
 #### parameters
 * market - Symbol of a market
-* state - 'all'|'unknown'|'open'|'expired'|'unfilled'|'unfunded'|'cancelled'
+* state - 'all'|'unknown'|'open'|'expired'|'filled'|'unfunded'|'cancelled'
 
 ```
 [
@@ -260,7 +274,7 @@ Returns the user's orders
             takerTokenAmount: '20000000000000000',
             makerFee: '100000000000000',
             takerFee: '200000000000000',
-            expirationUnixTimestampSec: '42',
+            expirationUnixTimestampSec: '1518124088',
             salt: 67006738228878699843088602623665307406148487219438534730168799356281242528500,
             ecSignature: {
                 v: 27,
@@ -305,8 +319,8 @@ Returns information about the order identified by the orderId passed in the url.
         takerTokenAmount: '20000000000000000',
         makerFee: '100000000000000',
         takerFee: '200000000000000',
-        expirationUnixTimestampSec: '42',
-        salt: 67006738228878699843088602623665307406148487219438534730168799356281242528500,
+        expirationUnixTimestampSec: '1518124088',
+        salt: '67006738228878699843088602623665307406148487219438534730168799356281242528500',
         ecSignature: {
             v: 27,
             r: '0x61a3ed31b43c8780e905a260a35faefcc527be7516aa11c0256729b5b351bc33',
@@ -488,19 +502,22 @@ Create an unsigned 0x compatible order.
 * orderType
 * price
 * amount
-* expirationDate
+* expirationDate 
+
+The expirationDate format is 2017-11-21T18:00:00Z
+Currently the expirationDate needs to be between 5 mins and 2 weeks greater than the time when the orderParams endpoint is called
 
 Returns:
 ```
 {
-'fee': { 
-    'id': 'b046140686d052fff581f63f8136cce1',
-    'baseFeeDecimal': '1.697552694864903098033668128',
-    'tradingFeeDecimal': '21.21940868581128872542085161'
+fee: { 
+    id: 'b046140686d052fff581f63f8136cce1',
+    baseFeeDecimal: '1.697552694864903098033668128',
+    tradingFeeDecimal: '21.21940868581128872542085161'
 },
-'zrxOrder': {
+zrxOrder: {
     exchangeContractAddress: '0x12459c951127e0c374ff9105dda097662a027093',
-    expirationUnixTimestampSec: '632',
+    expirationUnixTimestampSec: '1518124088',
     feeRecipient: '0xb046140686d052fff581f63f8136cce132e857da',
     maker: '0x9e56625509c2f60af937f23b7b532600390e8c8b',
     makerFee: '100000000000000',
@@ -519,24 +536,26 @@ Returns:
 ## POST /v0/order
 `private endpoint`
 
-Creates an order on the Paradex by posting a signed 0x compatible order. To get an compatible unsigned order, see POST /v0/orderParams
+Creates an order on Paradex by posting a signed 0x compatible order. To get an compatible unsigned order, see the zrxOrder object returned by POST /v0/orderParams
+The zrxOrder must be signed and the resultant vrs added to the order submission.
+The feeId in the order submission is also returned in the orderParams endpoint in the fee object. 
 
 #### parameters
 
 ```
 {
-    exchangeContractAddress: string,
-    expirationUnixTimestampSec: BigNumber,
-    feeRecipient: string,
-    maker: string,
-    makerFee: BigNumber,
-    makerTokenAddress: string,
-    makerTokenAmount: BigNumber,
-    salt: BigNumber,
-    taker: string,
-    takerFee: BigNumber,
-    takerTokenAddress: string,
-    takerTokenAmount: BigNumber,
+    exchangeContractAddress: '0x12459c951127e0c374ff9105dda097662a027093',
+    expirationUnixTimestampSec: '1518124088',
+    feeRecipient: '0xb046140686d052fff581f63f8136cce132e857da',
+    maker: '0x9e56625509c2f60af937f23b7b532600390e8c8b',
+    makerFee: '100000000000000',
+    makerTokenAddress: '0xef7fff64389b814a946f3e92105513705ca6b990',
+    makerTokenAmount: '22000000000000000',
+    salt: '54515451557974875123697849345751275676157243756715784155226239582178',
+    taker: '0xa2b31dacf30a9c50ca473337c01d8a201ae33e32',
+    takerFee: '200000000000000',
+    takerTokenAddress: '0x323b5d4c32345ced77393b3530b1eed0f346429d',
+    takerTokenAmount: '10000000000000000',
     v: 27,
     r: '0x61a3ed31b43c8780e905a260a35faefcc527be7516aa11c0256729b5b351bc33',
     s: '0x40349190569279751135161d22529dc25add4f6069af05be04cacbda2ace2254'
