@@ -44,12 +44,15 @@ Given the following POST parameters
 }
 ```
 
-We create a payload message by ordering the payload by the keys then concatinating the keys together followed by the values for those keys concatinated together. So for the above payload we would get the following payload message
+We create a payload message by ordering the payload by the keys then concatinating the keys together followed by the values for those keys concatinated together. Please note this message contains "Ethereum Signed Message:" prefix along with the length of the message. So for the above payload we would get the following payload message. 
 
 ```
-marketnoncestateREP/WETH1234567all
+'\u0019Ethereum Signed Message:\n34marketnoncestateREP/WETH1234567all'
 ```
-Please note this message does not contain "Ethereum Signed Message:" prefix and so cannot be signed using the eth_sign RPC call. This is not the case for the actual signing of the orders. To be compatible with the 0x contract the prefix should be included in the message that creates the order hash
+Depending on the language and library that you are using to hash the message the prefix might be automatically added to the string that you are passing in so make sure that it is not getting added twice. If the library you are using does automatically add in the prefix then the payload message to pass into the hash function would be
+```
+'marketnoncestateREP/WETH1234567all'
+```
 
 This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the API-SIG header of the request. The API-SIG is constructed by concatenating the r + s + v values together in that order. A typescript example of the signing process is included here as a referance 
 
@@ -60,11 +63,11 @@ import * as utils from "ethereumjs-util"
 let message = 'marketnoncestateREP/WETH1234567all';
 let privateKey = '0xabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca';
 
-let sha = utils.sha3(message);
+let sha = utils.hashPersonalMessage(Buffer.from(message));
 let signature = utils.ecsign(sha, utils.toBuffer(privateKey));
 let APISIG = utils.toRpcSig(signature.v, signature.r, signature.s);
 ```
-This produces the signature `0x38c20ccebd1f829538ec57ceec697ab88542dea62bcb64b4ae5733a4d46709747bd9b7da62e883eb462b5c8049bae336342f5f5d3f06fe94180c2fa3780e411000`
+This produces the signature `0xa5539969aad2a815ac40b961e1fde9f5c12f60cff9b0fb140a90e581339698020202cde14a9ef9fc8d027fc0d3e99ca026570ee5fd10d70e041a9d1b5dbdb29401`
 
 
 
