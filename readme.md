@@ -31,7 +31,7 @@ API-KEY: odxnkc39oenis239p88geuth4p7fkbic
 
 There are two types of endpoints in the Paradex Consumer API, `public` and `private`. While both require a valid api key, `private endpoints` return sensitive information pertaining to an ethereum account and have additional checks in place to ensure account security.
 
-All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-VRS header. A nonce is also included in the payload to ensure requests can't be harvested and resubmitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
+All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-SIG header. A nonce is also included in the payload to ensure requests can't be harvested and resubmitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
 
 ### Signing Requests
 
@@ -51,7 +51,7 @@ marketnoncestateREP/WETH1234567all
 ```
 Please note this message does not contain "Ethereum Signed Message:" prefix and so cannot be signed using the eth_sign RPC call. This is not the case for the actual signing of the orders. To be compatible with the 0x contract the prefix should be included in the message that creates the order hash
 
-This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the API-VRS header of the request. The API-VRS is constructed by concatenating the r + s + v values together in that order. A typescript example of the signing process is included here as a referance 
+This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the API-SIG header of the request. The API-SIG is constructed by concatenating the r + s + v values together in that order. A typescript example of the signing process is included here as a referance 
 
 
 ```
@@ -62,7 +62,7 @@ let privateKey = '0xabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc
 
 let sha = utils.sha3(message);
 let signature = utils.ecsign(sha, utils.toBuffer(privateKey));
-let APIVRS = utils.toRpcSig(signature.v, signature.r, signature.s);
+let APISIG = utils.toRpcSig(signature.v, signature.r, signature.s);
 ```
 This produces the signature `0x38c20ccebd1f829538ec57ceec697ab88542dea62bcb64b4ae5733a4d46709747bd9b7da62e883eb462b5c8049bae336342f5f5d3f06fe94180c2fa3780e411000`
 
