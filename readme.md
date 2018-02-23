@@ -125,6 +125,16 @@ Aside from HTTP 200 responses the following HTTP error codes are used by the con
 
 # Paradex Consumer API
 
+## GET /v0/nonce
+`public endpoint`
+
+Returns your current nonce
+
+```
+{
+    nonce: 0
+}
+```
 
 ## GET /v0/tokens
 `public endpoint`
