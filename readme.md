@@ -143,7 +143,7 @@ signedOrder['feeId'] = orderParams.fee.id;
 
 ## Order expiry
 
-All orders must have an valid expiration date. At the time of order placement this has to be between 5 minutes and 2 weeks in the future. The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time for the trade to be broadcast to and processed by the ethereum network an order will only remain valid on the Paradex orderbook if it has at least 5 minutes to go till its expiration date. Therefore if you want an order to appear on the orderbook for a minute you would set the expirationDate to be 6 minutes in the future. 
+All orders must have an valid expiration date. At the time of order placement this has to be between 10 minutes and 2 weeks in the future. The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time for the trade to be broadcast to and processed by the ethereum network an order will only remain valid on the Paradex orderbook if it has at least 10 minutes to go till its expiration date. Therefore if you want an order to appear on the orderbook for 1 minute you would set the expirationDate to be 11 minutes in the future. 
 
 
 ## Errors
@@ -165,14 +165,16 @@ The consumer api will return a HTTP 200 response for most requests. The returned
 All error responses have `code` and `reason` properties. Additionally validation errors contain an array of the fields that have failed validation while incorrect nonce errors return the current nonce. Here is a list of the consumer api error codes 
 
 | Error Code | Reason
-| ---------  | --------------------------- |
-|    100     | Validation failed           |
-|    101     | Malformed JSON              |
-|    104     | Invalid API key             |
-|    105     | Invalid ethereum address    |
-|    106     | Invalid signature           |
-|    107     | Invalid nonce               |
-|    108     | Server Error                |
+| ---------  | --------------------------------------- |
+|    100     | Validation failed                       |
+|    101     | Malformed JSON                          |
+|    104     | Invalid API key                         |
+|    105     | Invalid ethereum address                |
+|    106     | Invalid signature                       |
+|    107     | Invalid nonce                           |
+|    108     | Server Error                            |
+|    109     | Exceeded max decimal places             |
+|    110     | Unviable: Order fees exceed order value |
 
 
 Aside from HTTP 200 responses the following HTTP error codes are used by the consumer api 
