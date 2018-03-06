@@ -586,7 +586,7 @@ Create an unsigned 0x compatible order.
 * expirationDate - expiration date and time of order in ISO 8601 format
 
 The expirationDate format is 2017-11-21T18:00:00Z
-Currently the expirationDate needs to be between 5 mins and 2 weeks greater than the time when the orderParams endpoint is called
+Currently the expirationDate needs to be between 10 mins and 2 weeks greater than the time when the orderParams endpoint is called
 
 Returns:
 ```
