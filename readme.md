@@ -5,6 +5,12 @@
 
 [Sending Requests](#sending-requests)
 
+[Deposits/Withdrawals](#depositswithdrawals)
+
+[Placing and Signing Orders](#placing-and-signing-orders)
+
+[Order Expiry](#order-expiry)
+
 [Errors](#errors)
 
 [Misc](#misc)
@@ -33,7 +39,7 @@ There are two types of endpoints in the Paradex Consumer API, `public` and `priv
 
 All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-SIG header. A nonce is also included in the payload to ensure requests can't be harvested and resubmitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
 
-### Signing Requests
+### Signing the payload of requests
 
 Given the following POST parameters
 ```
@@ -60,12 +66,28 @@ This message is then hashed using Keccak-256 and signed by the private key for t
 ```
 import * as utils from "ethereumjs-util"
 
-let message = 'marketnoncestateREP/WETH1234567all';
+let payload = {
+    market: 'REP/WETH'
+    state: 'all'
+    nonce: 1234567
+}
+
+let message = createMessage(payload); // returns 'marketnoncestateREP/WETH1234567all'
+
 let privateKey = '0xabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca';
 
 let sha = utils.hashPersonalMessage(Buffer.from(message));
 let signature = utils.ecsign(sha, utils.toBuffer(privateKey));
 let APISIG = utils.toRpcSig(signature.v, signature.r, signature.s);
+
+function createMessage(payload) {
+    let keys = Object.keys(payload).sort();
+    let message = keys.join("");
+    for (let key of keys) {
+        message += payload[key];
+    }
+    return message
+}
 ```
 This produces the signature `0xa5539969aad2a815ac40b961e1fde9f5c12f60cff9b0fb140a90e581339698020202cde14a9ef9fc8d027fc0d3e99ca026570ee5fd10d70e041a9d1b5dbdb29401`
 
@@ -78,7 +100,51 @@ Paradex is a non custodial decentralised trading platform. This means you retain
 ## Wrapping ETH and Setting Allowances
 
 Paradex enables the decentralised trading of ERC20 tokens. The ERC20 standard was created to provide a common interface for how tokens will function and was created after the initial Ethereum standard. As such Ethereum is not currently an ERC20 token and has to be converted to a compatible ERC20 Ethereum called Wrapped-ETH (WETH). Unsurprisingly this conversion process is called wrapping with 1 WETH being equivalent to 1 ETH in value.
-Another feature of ERC20 tokens is allowances. Allowances allow you to control how much if any of your funds can be transfered by out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0 so before you begin trading you have to set allowances for your tokens. Remember even once you have set your allowances no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting your allowances for that token your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
+Another feature of ERC20 tokens is allowances. Allowances allow you to control how much if any of your funds can be transferred out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0 so before you begin trading you have to set allowances for your tokens. Remember even once you have set your allowances no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting your allowances for that token your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
+
+## Placing and Signing Orders
+
+To place orders on the book that can then be sent to the 0x contracts to be traded when matched you have to submit a signed order (zrxOrder). This is seperate and slightly different from the payload signing process described above. When placing requests to the order endpoint you have to go through both signing processes as they maintain security at different points in the system. Signing the payload message proves to the Paradex api that you control the account you are sending orders for while signing the order itself gives authority to the 0x contract to process your order.
+
+To get a the correct parameters for a zrxOrder object we have a conveniance method `orderParams` that returns a zrxOrder object along with a fees object. The fees object tells you what fees your order will incur if traded. For transparancy fees are split into two parts: baseFeeDecimal and tradingFeeDecimal. The baseFeeDecimal is the gas cost to execute the trade(s) while the tradingFee is the commission on the trade. Fee's are proportional to the amount of your total order that get's filled. So for instance if only 50% of your order get's filled you will only pay 50% of the fees quoted. Once issued fee quotes are valid for 30 minutes.
+
+To call the orderParams endpoint you need to submit the following information
+```
+market - symbol of market
+orderType - 'buy'|'sell'
+price - price in quote currency
+amount - amount of base currency
+expirationDate - expiration date and time of order in ISO 8601 format
+```
+There are some important details regarding the expirationDate. For more info please see the [order expiry](#order-expiry) section below)
+
+Once you have a zrxOrder to sign and a fee quote you can start the order submission process. Firstly you need to sign the zrxOrder. As described above the order process is slightly different from the payload signing. Below you can see an example of how you would sign the zrxOrder and then add the correct fields to the order to allow it to be submitted to the order endpoint. Once you have the full signed order it should go through the same payload signing process required by the other endpoints.
+```
+import BN = require('bn.js');
+import { utils } from '0x.js/lib/src/utils/utils'
+import * as ethUtil from "ethereumjs-util"
+
+let privateKey = '0xabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabca'
+// get orderParams from orderParams endpoint in paradex apx
+let orderParams = {.....} // data returned from orderParams endpoint
+
+let hashHex = utils.getOrderHashHex(orderParams.zrxOrder);
+let hashHexBuffer = ethUtil.toBuffer(hashHex);
+let prefix = ethUtil.toBuffer('\u0019Ethereum Signed Message:\n32');
+let hashedHash = ethUtil.sha3(Buffer.concat([prefix, hashHexBuffer]));
+let signature = ethUtil.ecsign(hashedHash, ethUtil.toBuffer(privateKey));
+
+let signedOrder = orderParams.zrxOrder;
+signedOrder['v'] = signature.v;
+signedOrder['r'] = ethUtil.bufferToHex(signature.r);
+signedOrder['s'] = ethUtil.bufferToHex(signature.s);
+signedOrder['feeId'] = orderParams.fee.id;
+```
+
+## Order expiry
+
+All orders must have an valid expiration date. At the time of order placement this has to be between 10 minutes and 2 weeks in the future. The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time for the trade to be broadcast to and processed by the ethereum network an order will only remain valid on the Paradex orderbook if it has at least 10 minutes to go till its expiration date. Therefore if you want an order to appear on the orderbook for 1 minute you would set the expirationDate to be 11 minutes in the future. 
+
 
 ## Errors
 
@@ -99,14 +165,16 @@ The consumer api will return a HTTP 200 response for most requests. The returned
 All error responses have `code` and `reason` properties. Additionally validation errors contain an array of the fields that have failed validation while incorrect nonce errors return the current nonce. Here is a list of the consumer api error codes 
 
 | Error Code | Reason
-| ---------  | --------------------------- |
-|    100     | Validation failed           |
-|    101     | Malformed JSON              |
-|    104     | Invalid API key             |
-|    105     | Invalid ethereum address    |
-|    106     | Invalid signature           |
-|    107     | Invalid nonce               |
-|    108     | Server Error                |
+| ---------  | --------------------------------------- |
+|    100     | Validation failed                       |
+|    101     | Malformed JSON                          |
+|    104     | Invalid API key                         |
+|    105     | Invalid ethereum address                |
+|    106     | Invalid signature                       |
+|    107     | Invalid nonce                           |
+|    108     | Server Error                            |
+|    109     | Exceeded max decimal places             |
+|    110     | Unviable: Order fees exceed order value |
 
 
 Aside from HTTP 200 responses the following HTTP error codes are used by the consumer api 
@@ -179,9 +247,9 @@ Returns a list of markets:
 
 Reruns OHLCV data
 #### parameters
-* market: Symbol of a market
-* period: 1m|5m|15m|1h|6h|1d
-* amount: (Int) How many candles to be returned
+* market - Symbol of a market
+* period - '1m'|'5m'|'15m'|'1h'|'6h'|'1d'
+* amount - (Int) How many candles to be returned
 
 ```
 [
@@ -204,7 +272,7 @@ Reruns OHLCV data
 Returns ticker data for a market
 
 #### parameters
-* market: Symbol of a market
+* market - Symbol of a market
 
 ```
 {
@@ -248,11 +316,11 @@ Returns the order book for a given market. The orderbook representation merges o
 
 Get the fees for an order.
 #### parameters
-* market
-* orderType
-* price
-* amount
-* expirationDate
+* market - Symbol of a market
+* orderType - 'buy'|'sell'
+* price - price in quote currency
+* amount - amount of base currency
+* expirationDate - expiration date and time of order in ISO 8601 format
 
 Returns:
 ```
@@ -511,14 +579,14 @@ Returns the users balances.
 
 Create an unsigned 0x compatible order.
 #### parameters
-* market
-* orderType
-* price
-* amount
-* expirationDate 
+* market - Symbol of a market
+* orderType - 'buy'|'sell'
+* price - price in quote currency
+* amount - amount of base currency
+* expirationDate - expiration date and time of order in ISO 8601 format
 
 The expirationDate format is 2017-11-21T18:00:00Z
-Currently the expirationDate needs to be between 5 mins and 2 weeks greater than the time when the orderParams endpoint is called
+Currently the expirationDate needs to be between 10 mins and 2 weeks greater than the time when the orderParams endpoint is called
 
 Returns:
 ```
@@ -589,7 +657,7 @@ The feeId in the order submission is also returned in the orderParams endpoint i
 
 cancels an order.
 #### parameters
-* id
+* id - id of the order you want to cancel
 
 **Returns**
 ```
