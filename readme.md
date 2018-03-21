@@ -675,9 +675,9 @@ cancels an order.
 Gets trade history for a market.
 #### parameters
 * market - Symbol of a market
-* page - page of results (default 1)
-* per_page - number of results per page (default 10, max 100)
-* since - ISO 8601 start date (default now, e.g., 2018-03-07T16:31:27Z)
+* page - optional. page of results (default 1)
+* per_page - optional. number of results per page (default 10, max 100)
+* since - optional. ISO 8601 start date (e.g., 2018-03-07T16:31:27Z)
 
 **Returns**
 ```
