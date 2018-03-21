@@ -333,7 +333,7 @@ Returns:
 
 
 ## POST /v0/orders
-`private endpoint`
+`public endpoint`
 
 Returns the user's orders
 
@@ -380,7 +380,7 @@ Returns the user's orders
 
 
 ## POST /v0/viewOrder
-`private endpoint`
+`public endpoint`
 
 #### parameters
 * id - id of the order to view
@@ -423,7 +423,7 @@ Returns information about the order identified by the orderId passed in the url.
 
 
 ## POST /v0/viewOrderTrades
-`private endpoint`
+`public endpoint`
 
 #### parameters
 * id - id of the order whose trades you want to view
@@ -489,7 +489,7 @@ Returns trades and corresponding price adjustments connected with the order iden
 
 
 ## POST /v0/trades
-`private endpoint`
+`public endpoint`
 
 Returns the users trades.
 
@@ -507,6 +507,7 @@ Returns the users trades.
             baseToken: 'REP',
             quoteToken: 'ETH',
             txHash: None,
+            createdAt: "2018-03-09T02:50:27Z"
             completedAt: None,
             baseFee: '',
             tradingFee: '',
@@ -522,6 +523,7 @@ Returns the users trades.
             baseToken: 'REP', 
             quoteToken: 'ETH', 
             txHash: '0x1234567891234567891234567890000',
+            createdAt: "2018-03-09T02:50:27Z"
             completedAt: '2017-11-14T23:15:18Z',
             baseFee: '',
             tradingFee: '',
@@ -555,7 +557,7 @@ Returns the users trades.
 
 
 ## POST /v0/balances
-`private endpoint`
+`public endpoint`
 
 Returns the users balances.
 
@@ -664,4 +666,47 @@ cancels an order.
 {
     status: true|false
 }
+```
+
+
+## GET /v0/tradeHistory
+`public endpoint`
+
+Gets trade history for a market.
+#### parameters
+* market - Symbol of a market
+* page - optional. page of results (default 1)
+* per_page - optional. number of results per page (default 10, max 100)
+* since - optional. ISO 8601 start date (e.g., 2018-03-07T16:31:27Z)
+
+**Returns**
+```
+{
+   count: 10,
+   trades: [
+      {
+        "id": 2825,
+        "created": "2018-03-14T22:19:48Z",
+        "completed": "2018-03-14T22:21:05Z",
+        "type": "sell",
+        "price": "0.0275",
+        "amount": "25",
+        "total": "0.6875",
+        "market": "NMR/WETH",
+        "state": "confirmed"
+      },
+      {
+        "id": 2139,
+        "created": "2018-03-09T02:50:27Z",
+        "completed": "2018-03-09T02:51:46Z",
+        "type": "sell",
+        "price": "0.033",
+        "amount": "10",
+        "total": "0.33",
+        "market": "NMR/WETH",
+        "state": "confirmed"
+      },
+      ...
+   ]
+}   
 ```
