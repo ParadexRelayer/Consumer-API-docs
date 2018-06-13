@@ -143,12 +143,12 @@ signedOrder['feeId'] = orderParams.fee.id;
 
 ## Order expiry
 
-All orders must have an valid expiration date. At the time of order placement this has to be between 10 minutes and 2 weeks in the future. The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time for the trade to be broadcast to and processed by the ethereum network an order will only remain valid on the Paradex orderbook if it has at least 10 minutes to go till its expiration date. Therefore if you want an order to appear on the orderbook for 1 minute you would set the expirationDate to be 11 minutes in the future. 
+All orders must have a valid expiration date. At the time of order placement this has to be between 10 minutes and 2 weeks in the future. The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time for the trade to be broadcast to and processed by the ethereum network an order will only remain valid on the Paradex orderbook if it has at least 10 minutes to go till its expiration date. Therefore if you want an order to appear on the orderbook for 1 minute you would set the expirationDate to be 11 minutes in the future. 
 
 
 ## Errors
 
-The consumer API will return a HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below. 
+The consumer API will return an HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below. 
 
 ```
 {
@@ -162,7 +162,7 @@ The consumer API will return a HTTP 200 response for most requests. The returned
     }
 }
 ```
-All error responses have `code` and `reason` properties. Additionally validation errors contain an array of the fields that have failed validation while incorrect nonce errors return the current nonce. Here is a list of the consumer API error codes 
+All error responses have `code` and `reason` properties. Additionally, validation errors contain an array of the fields that have failed validation. Incorrect nonce errors return the current nonce. Here are the current consumer API error codes:
 
 | Error Code | Reason
 | ---------  | --------------------------------------- |
@@ -196,13 +196,26 @@ Aside from HTTP 200 responses the following HTTP error codes are used by the con
 ## GET /v0/nonce
 `public endpoint`
 
-Returns your current nonce
+Returns your current nonce:
 
 ```
 {
     nonce: 0
 }
 ```
+
+## GET /v0/expirations
+`public endpoint`
+
+Returns current min and max expiration time allowed for orders. These values should be considered dynamic and may change with network conditions. The fee object returned from `orderParams` will also convey this expiration information, as it will tell you an estimate of when your order will be pruned from the book:
+
+```
+{
+    minExpirationMinutes: 5,
+    maxExpirationMinutes: 21600
+}
+```
+
 
 ## GET /v0/tokens
 `public endpoint`
@@ -308,28 +321,6 @@ Returns the order book for a given market. The orderbook representation merges o
     ]
 }
 ```
-
-
-
-## POST /v0/fees
-`private endpoint`
-
-Get the fees for an order.
-#### parameters
-* market - Symbol of a market
-* orderType - 'buy'|'sell'
-* price - price in quote currency
-* amount - amount of base currency
-* expirationDate - expiration date and time of order in ISO 8601 format
-
-Returns:
-```
-{ 
-    baseFeeDecimal: '1.697552694864903098033668128',
-    tradingFeeDecimal: '21.21940868581128872542085161',
-}
-```
-
 
 
 ## POST /v0/orders
