@@ -19,29 +19,29 @@
 
 ## API URLs
 ### mainnet
-To access our mainnet instance use the following url as the base url for our endpoints.
+For mainnet, use the following base url:
 
 https://api.paradex.io/consumer
 
 ### kovan
-As well as the mainnet version of the API Paradex has a kovan instance to allow for testing. The base url for our kovan instance is
+For kovan, use:
 
 https://kovan-api.paradex.io/consumer
 
 ## Sending Requests
 
-To access the api you need to have a valid api key. Currently all endpoints require a valid api key which should be sent in the headers of every request
+To access the API you need a valid API key. All endpoints require your API key to be sent in the header of every request.
 ```
 API-KEY: odxnkc39oenis239p88geuth4p7fkbic
 ```
 
-There are two types of endpoints in the Paradex Consumer API, `public` and `private`. While both require a valid api key, `private endpoints` return sensitive information pertaining to an ethereum account and have additional checks in place to ensure account security.
+There are two types of endpoints in the Paradex Consumer API: `public` and `private`. While both require a valid API key, `private endpoints` return sensitive trading or order activity for that ethereum account and have additional checks in place to ensure account security.
 
-All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your api key. The api will only allow you to perform actions relating to this ethereum account The resultant signature should be sent in the header of the request using the API-SIG header. A nonce is also included in the payload to ensure requests can't be harvested and resubmitted. For new api accounts the nonce is set to 0 and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid api key or an invalid nonce.
+All private endpoints are POST requests which require you to sign the payload using the ethereum account associated with your API key. The API will only allow you to perform actions relating to this ethereum account. The resultant signature should be sent in the header of the request using the API-SIG header. A nonce is also included in the payload to ensure requests can't be harvested and replayed. For new API accounts the nonce is set to 0, and every request must contain an integer nonce greater than the nonce used in the last request. The nonce is incremented even if the request was not successful. The only actions that do not result in the nonce being incremented are an invalid API key or an invalid nonce.
 
 ### Signing the payload of requests
 
-Given the following POST parameters
+Given the following POST parameters:
 ```
 {
     market: 'REP/WETH'
@@ -50,17 +50,17 @@ Given the following POST parameters
 }
 ```
 
-We create a payload message by ordering the payload by the keys then concatinating the keys together followed by the values for those keys concatinated together. Please note this message contains "Ethereum Signed Message:" prefix along with the length of the message. So for the above payload we would get the following payload message. 
+We create a payload message by ordering the payload by the keys then concatenating the keys together, followed by the values for those keys concatenated together. Please note this message contains the "Ethereum Signed Message:" prefix along with the length of the message. So for the above payload, we'd get the following payload message: 
 
 ```
 '\u0019Ethereum Signed Message:\n34marketnoncestateREP/WETH1234567all'
 ```
-Depending on the language and library that you are using to hash the message the prefix might be automatically added to the string that you are passing in so make sure that it is not getting added twice. If the library you are using does automatically add in the prefix then the payload message to pass into the hash function would be
+Depending on the language and library that you are using to hash the message, the prefix might be automatically added to the string you are passing in, so make sure that it isn't getting added twice. If the library you're using does automatically add in the prefix then the payload message to pass into the hash function would be
 ```
 'marketnoncestateREP/WETH1234567all'
 ```
 
-This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the API-SIG header of the request. The API-SIG is constructed by concatenating the r + s + v values together in that order. A typescript example of the signing process is included here as a referance 
+This message is then hashed using Keccak-256 and signed by the private key for the ethereum account to produce a vrs signature which we include in the API-SIG header of the request. The API-SIG is constructed by concatenating the r + s + v values together in that order. A typescript example of the signing process is included here for reference:
 
 
 ```
@@ -95,20 +95,20 @@ This produces the signature `0xa5539969aad2a815ac40b961e1fde9f5c12f60cff9b0fb140
 
 ## Deposits/Withdrawals
 
-Paradex is a non custodial decentralised trading platform. This means you retain complete control of your funds and they stay within your own wallet until a trade takes place. As such there is no way to deposit or withdraw funds to or from Paradex. Assets can be moved in and out of your wallet using the normal means at your disposal either programmatically or via an application. What you will need to do though is wrap Eth and set allowances. Please see below
+Paradex is a non-custodial platform. This means you retain complete control of your funds and they stay in your own wallet until a trade takes place. As such, there is no way to deposit or withdraw funds to or from Paradex. Assets can be moved in and out of your wallet either programmatically or via an application. You will need to wrap ether and set allowances for tokens you want to sell.
 
 ## Wrapping ETH and Setting Allowances
 
-Paradex enables the decentralised trading of ERC20 tokens. The ERC20 standard was created to provide a common interface for how tokens will function and was created after the initial Ethereum standard. As such Ethereum is not currently an ERC20 token and has to be converted to a compatible ERC20 Ethereum called Wrapped-ETH (WETH). Unsurprisingly this conversion process is called wrapping with 1 WETH being equivalent to 1 ETH in value.
-Another feature of ERC20 tokens is allowances. Allowances allow you to control how much if any of your funds can be transferred out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0 so before you begin trading you have to set allowances for your tokens. Remember even once you have set your allowances no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting your allowances for that token your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
+The ERC20 standard was created to provide a common interface for how tokens. Ether is not currently an ERC20 token and has to be converted to an ERC20 compatible token called Wrapped-ETH (WETH). This conversion process is called wrapping, with 1 WETH being equivalent to 1 ETH.
+Another feature of ERC20 tokens is allowances. Allowances allow you to control how much of your funds can be transferred out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0, so before you begin trading you'll need to set allowances for your tokens. Even once you have set your allowances set, no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting an allowance for that token, your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
 
 ## Placing and Signing Orders
 
-To place orders on the book that can then be sent to the 0x contracts to be traded when matched you have to submit a signed order (zrxOrder). This is seperate and slightly different from the payload signing process described above. When placing requests to the order endpoint you have to go through both signing processes as they maintain security at different points in the system. Signing the payload message proves to the Paradex api that you control the account you are sending orders for while signing the order itself gives authority to the 0x contract to process your order.
+To place orders on the book that can then be sent to the 0x contracts to be traded when matched you have to submit a signed order (zrxOrder). This is slightly different from the payload signing process described above. When placing requests to the order endpoint, you have to go through both signing processes as they maintain security at different points in the system. Signing the payload message proves to the Paradex API that you control the account you are sending orders for while signing the order itself gives authority to the 0x contract to settle your order.
 
-To get a the correct parameters for a zrxOrder object we have a conveniance method `orderParams` that returns a zrxOrder object along with a fees object. The fees object tells you what fees your order will incur if traded. For transparancy fees are split into two parts: baseFeeDecimal and tradingFeeDecimal. The baseFeeDecimal is the gas cost to execute the trade(s) while the tradingFee is the commission on the trade. Fee's are proportional to the amount of your total order that get's filled. So for instance if only 50% of your order get's filled you will only pay 50% of the fees quoted. Once issued fee quotes are valid for 30 minutes.
+To get the correct parameters for a zrxOrder object we have a conveniance method `orderParams` that returns a zrxOrder object along with a fees object. The fees object tells you what fees your order will incur if traded. For transparency fees are split into two parts: baseFeeDecimal and tradingFeeDecimal. The baseFeeDecimal is the gas cost to execute the trade(s) while the tradingFee is the commission on the trade. Fees are proportional to the amount of your total order that get's filled. For example, if only 50% of your order gets filled you will only pay 50% of the fees quoted. Once issued fee quotes are valid for 30 minutes.
 
-To call the orderParams endpoint you need to submit the following information
+To call the orderParams endpoint you need to submit the following:
 ```
 market - symbol of market
 orderType - 'buy'|'sell'
@@ -118,7 +118,7 @@ expirationDate - expiration date and time of order in ISO 8601 format
 ```
 There are some important details regarding the expirationDate. For more info please see the [order expiry](#order-expiry) section below)
 
-Once you have a zrxOrder to sign and a fee quote you can start the order submission process. Firstly you need to sign the zrxOrder. As described above the order process is slightly different from the payload signing. Below you can see an example of how you would sign the zrxOrder and then add the correct fields to the order to allow it to be submitted to the order endpoint. Once you have the full signed order it should go through the same payload signing process required by the other endpoints.
+Once you have a zrxOrder to sign and a fee quote you can start the order submission process. First, you need to sign the zrxOrder. Here's an example of signing the zrxOrder and adding the correct fields to the order to allow it to be submitted to the order endpoint. Once you have the full signed order it should go through the same payload signing process required by the other endpoints.
 ```
 import BN = require('bn.js');
 import { utils } from '0x.js/lib/src/utils/utils'
@@ -148,7 +148,7 @@ All orders must have an valid expiration date. At the time of order placement th
 
 ## Errors
 
-The consumer api will return a HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below. 
+The consumer API will return a HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below. 
 
 ```
 {
@@ -162,7 +162,7 @@ The consumer api will return a HTTP 200 response for most requests. The returned
     }
 }
 ```
-All error responses have `code` and `reason` properties. Additionally validation errors contain an array of the fields that have failed validation while incorrect nonce errors return the current nonce. Here is a list of the consumer api error codes 
+All error responses have `code` and `reason` properties. Additionally validation errors contain an array of the fields that have failed validation while incorrect nonce errors return the current nonce. Here is a list of the consumer API error codes 
 
 | Error Code | Reason
 | ---------  | --------------------------------------- |
@@ -177,7 +177,7 @@ All error responses have `code` and `reason` properties. Additionally validation
 |    110     | Unviable: Order fees exceed order value |
 
 
-Aside from HTTP 200 responses the following HTTP error codes are used by the consumer api 
+Aside from HTTP 200 responses the following HTTP error codes are used by the consumer API 
 
 | HTTP Code | Reason
 | --------- | -------------------------------------------- |
