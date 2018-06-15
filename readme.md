@@ -95,18 +95,18 @@ This produces the signature `0xa5539969aad2a815ac40b961e1fde9f5c12f60cff9b0fb140
 
 ## Deposits/Withdrawals
 
-Paradex is a non-custodial platform. This means you retain complete control of your funds and they stay in your own wallet until a trade takes place. As such, there is no way to deposit or withdraw funds to or from Paradex. Assets can be moved in and out of your wallet either programmatically or via an application. You will need to wrap ether and set allowances for tokens you want to sell.
+Paradex is a non-custodial platform. This means you retain complete control of your funds and they stay in your own wallet until a trade takes place. As such, there is no way to deposit or withdraw funds to or from Paradex. Assets can be moved in and out of your wallet either programmatically or via an application. You will need to wrap Ether and set allowances for tokens you want to offer.
 
 ## Wrapping ETH and Setting Allowances
 
-The ERC20 standard was created to provide a common interface for how tokens. Ether is not currently an ERC20 token and has to be converted to an ERC20 compatible token called Wrapped-ETH (WETH). This conversion process is called wrapping, with 1 WETH being equivalent to 1 ETH.
-Another feature of ERC20 tokens is allowances. Allowances allow you to control how much of your funds can be transferred out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0, so before you begin trading you'll need to set allowances for your tokens. Even once you have set your allowances set, no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting an allowance for that token, your order will enter an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
+The ERC20 standard was created to provide a common interface for tokens. Ether is not currently an ERC20 token and has to be converted to an ERC20 compatible token called Wrapped-ETH (WETH). This conversion process is called wrapping, with 1 WETH being equivalent to 1 ETH.
+Another feature of ERC20 tokens is allowances. Allowances allow you to control how much of your funds can be transferred out of your wallet by the 0x contracts used by Paradex. By default your allowances are set to 0, so before you begin trading you'll need to set allowances for your tokens. Even once you have set your allowances set, no funds can be transferred out of your account without you putting a valid order on the orderbook. If you try and place an order to Paradex without setting an allowance for that token, your order will be in an unfunded state. If you want to set allowances programmatically, the 0x.js library provides some convenience methods to help you do that: https://www.0xproject.com/docs/0xjs#token
 
 ## Placing and Signing Orders
 
 To place orders on the book that can then be sent to the 0x contracts to be traded when matched you have to submit a signed order (zrxOrder). This is slightly different from the payload signing process described above. When placing requests to the order endpoint, you have to go through both signing processes as they maintain security at different points in the system. Signing the payload message proves to the Paradex API that you control the account you are sending orders for while signing the order itself gives authority to the 0x contract to settle your order.
 
-To get the correct parameters for a zrxOrder object we have a conveniance method `orderParams` that returns a zrxOrder object along with a fees object. The fees object tells you what fees your order will incur if traded. For transparency fees are split into two parts: baseFeeDecimal and tradingFeeDecimal. The baseFeeDecimal is the gas cost to execute the trade(s) while the tradingFee is the commission on the trade. Fees are proportional to the amount of your total order that get's filled. For example, if only 50% of your order gets filled you will only pay 50% of the fees quoted. Once issued fee quotes are valid for 30 minutes.
+To get the correct parameters for a zrxOrder object we have a convenience method `orderParams` that returns a zrxOrder object and a fees object. The fees object tells you what fees your order will incur if traded. For transparency fees are split into two parts: baseFeeDecimal and tradingFeeDecimal. The baseFeeDecimal is the gas cost to execute the trade(s) while the tradingFee is the commission on the trade. Fees are proportional to the amount of your total order that get's filled. For example, if only 50% of your order gets filled you will only pay 50% of the fees quoted. Once issued fee quotes are valid for 30 minutes.
 
 To call the orderParams endpoint you need to submit the following:
 ```
@@ -143,12 +143,17 @@ signedOrder['feeId'] = orderParams.fee.id;
 
 ## Order expiry
 
-All orders must have a valid expiration date. At the time of order placement this has to be between 10 minutes and 2 weeks in the future. The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time for the trade to be broadcast to and processed by the ethereum network an order will only remain valid on the Paradex orderbook if it has at least 10 minutes to go till its expiration date. Therefore if you want an order to appear on the orderbook for 1 minute you would set the expirationDate to be 11 minutes in the future. 
+All orders must have a valid expiration date. Min and max expiration times may change based on a number of factors like transaction backlogs and network conditions. You can look up the min and max expiration times by calling the `/v0/expirations` endpoint.
+
+
+The expiration date is the date that the order remains valid to be processed by the 0x contracts on the blockchain. To allow for enough time between trade broadcast and settlement on ethereum, an order will only remain valid on the Paradex orderbook if it has at least `minExpirationMinutes` minutes until its expiration. Therefore if you want an order to appear on the orderbook for 1 minute, you would set the expirationDate to be now() + minExpirationMinutes + 1 minute. Our goal is to eliminate settlement failures where an order reaches its expiration time while sitting in the pending tx pool waiting to be mined.
+
+You are of course free te set your expirations further in the future and cancel the order for free at any time. Specific details about your order's TTL will be returned to you in the fee object that is returned to you with `v0/orderParams`.
 
 
 ## Errors
 
-The consumer API will return an HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below. 
+The consumer API will return an HTTP 200 response for most requests. The returned data should be checked for the presence of an error field which indicates that there was a problem processing your request. An example error response is shown below:
 
 ```
 {
