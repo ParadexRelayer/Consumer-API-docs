@@ -207,7 +207,7 @@ Returns your current nonce:
 ## GET /v0/expirations
 `public endpoint`
 
-Returns current min and max expiration time allowed for orders. These values should be considered dynamic and may change with network conditions. The fee object returned from `orderParams` will also convey this expiration information, as it will tell you an estimate of when your order will be pruned from the book:
+Returns current min and max expiration time allowed for orders. These values should be considered dynamic and may change with network conditions. The fee object returned from `orderParams` will also convey this expiration information, as it will give you an estimate of when your order will be pruned from the book:
 
 ```
 {
@@ -587,7 +587,9 @@ Returns:
 fee: { 
     id: 'b046140686d052fff581f63f8136cce1',
     baseFeeDecimal: '1.697552694864903098033668128',
-    tradingFeeDecimal: '21.21940868581128872542085161'
+    tradingFeeDecimal: '21.21940868581128872542085161',
+    secundsUntilPrune: 60,
+    pruneUnixTimeStamp: 2017-11-21T18:00:00Z
 },
 zrxOrder: {
     exchangeContractAddress: '0x12459c951127e0c374ff9105dda097662a027093',
