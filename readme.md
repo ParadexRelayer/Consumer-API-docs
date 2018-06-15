@@ -579,7 +579,7 @@ Create an unsigned 0x compatible order.
 * expirationDate - expiration date and time of order in ISO 8601 format
 
 The expirationDate format is 2017-11-21T18:00:00Z
-A valid expirationDate needs to be between now() + min_expiration and now() + max_expiration. Min/max expiration can be obtained by calling the `expirations` endpoint.
+A valid expirationDate needs to be between now() + min_expiration and now() + max_expiration. Min/max expiration can be obtained by calling the `/v0/expirations` endpoint.
 
 Returns:
 ```
@@ -613,9 +613,9 @@ Note that on the fee object returned, it includes the approximate number of seco
 ## POST /v0/order
 `private endpoint`
 
-Creates an order on Paradex by posting a signed 0x compatible order. To get an compatible unsigned order, see the zrxOrder object returned by POST /v0/orderParams
+Creates an order on Paradex by posting a signed 0x compatible order. To get a compatible unsigned order, see the zrxOrder object returned by POST `/v0/orderParams`
 The zrxOrder must be signed and the resultant vrs added to the order submission.
-The feeId in the order submission is also returned in the orderParams endpoint in the fee object. 
+The feeId in the order submission is also returned in the `v0/orderParams` endpoint in the fee object. 
 
 #### parameters
 
@@ -651,7 +651,7 @@ The feeId in the order submission is also returned in the orderParams endpoint i
 ## POST /v0/orderCancel
 `private endpoint`
 
-cancels an order.
+Cancels an order.
 #### parameters
 * id - id of the order you want to cancel
 
