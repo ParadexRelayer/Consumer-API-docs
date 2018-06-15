@@ -579,7 +579,7 @@ Create an unsigned 0x compatible order.
 * expirationDate - expiration date and time of order in ISO 8601 format
 
 The expirationDate format is 2017-11-21T18:00:00Z
-Currently the expirationDate needs to be between 10 mins and 2 weeks greater than the time when the orderParams endpoint is called
+A valid expirationDate needs to be between now() + min_expiration and now() + max_expiration. Min/max expiration can be obtained by calling the `expirations` endpoint.
 
 Returns:
 ```
@@ -607,6 +607,7 @@ zrxOrder: {
 }}
 ```
 
+Note that on the fee object returned, it includes the approximate number of seconds that this order will live on the book for, and the approximate timestamp that this order will be pruned.
 
 
 ## POST /v0/order
