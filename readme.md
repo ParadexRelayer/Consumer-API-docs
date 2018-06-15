@@ -182,7 +182,7 @@ All error responses have `code` and `reason` properties. Additionally, validatio
 |    110     | Unviable: Order fees exceed order value |
 
 
-Aside from HTTP 200 responses the following HTTP error codes are used by the consumer API 
+Aside from HTTP 200 responses the following HTTP error codes are used by the consumer API.
 
 | HTTP Code | Reason
 | --------- | -------------------------------------------- |
@@ -263,7 +263,7 @@ Returns a list of markets:
 ## GET /v0/ohlcv
 `public endpoint`
 
-Reruns OHLCV data
+Reruns OHLCV data:
 #### parameters
 * market - Symbol of a market
 * period - '1m'|'5m'|'15m'|'1h'|'6h'|'1d'
@@ -287,7 +287,7 @@ Reruns OHLCV data
 ## GET /v0/ticker
 `public endpoint`
 
-Returns ticker data for a market
+Returns ticker data for a market:
 
 #### parameters
 * market - Symbol of a market
@@ -305,7 +305,7 @@ Returns ticker data for a market
 ## GET /v0/orderbook
 `public endpoint`
 
-Returns the order book for a given market. The orderbook representation merges orders of the same value to show the overall volume at each value.
+Returns the order book for a given market. The orderbook representation merges orders of the same value to show the overall volume at each value:
 #### parameters
 * market - Symbol of a market
 ```
@@ -331,7 +331,7 @@ Returns the order book for a given market. The orderbook representation merges o
 ## POST /v0/orders
 `public endpoint`
 
-Returns the user's orders
+Returns the user's orders:
 
 #### parameters
 * market - Symbol of a market
@@ -381,7 +381,7 @@ Returns the user's orders
 #### parameters
 * id - id of the order to view
 
-Returns information about the order identified by the orderId passed in the url.
+Returns information about the order identified by the orderId passed in the url:
 
 ```
 {
@@ -424,7 +424,7 @@ Returns information about the order identified by the orderId passed in the url.
 #### parameters
 * id - id of the order whose trades you want to view
 
-Returns trades and corresponding price adjustments connected with the order identified by the orderId passed in the url.
+Returns trades and corresponding price adjustments connected with the order identified by the orderId passed in the url:
 ```
 [
     {
@@ -487,7 +487,7 @@ Returns trades and corresponding price adjustments connected with the order iden
 ## POST /v0/trades
 `public endpoint`
 
-Returns the users trades.
+Returns the users trades:
 
 #### parameters
 * market - Symbol of a market
@@ -555,7 +555,7 @@ Returns the users trades.
 ## POST /v0/balances
 `public endpoint`
 
-Returns the users balances.
+Returns the users balances:
 
 ```
 [
@@ -575,7 +575,7 @@ Returns the users balances.
 ## POST /v0/orderParams
 `private endpoint`
 
-Create an unsigned 0x compatible order.
+Create an unsigned 0x compatible order:
 #### parameters
 * market - Symbol of a market
 * orderType - 'buy'|'sell'
@@ -656,7 +656,7 @@ The feeId in the order submission is also returned in the `v0/orderParams` endpo
 ## POST /v0/orderCancel
 `private endpoint`
 
-Cancels an order.
+Cancels an order:
 #### parameters
 * id - id of the order you want to cancel
 
@@ -671,7 +671,7 @@ Cancels an order.
 ## GET /v0/tradeHistory
 `public endpoint`
 
-Gets trade history for a market.
+Gets trade history for a market:
 #### parameters
 * market - Symbol of a market
 * page - optional. page of results (default 1)
