@@ -180,6 +180,8 @@ All error responses have `code` and `reason` properties. Additionally, validatio
 |    108     | Server Error                            |
 |    109     | Exceeded max decimal places             |
 |    110     | Unviable: Order fees exceed order value |
+|    111     | Region is read-only                     |
+|    112     | Market is suspended                     |
 
 
 Aside from HTTP 200 responses the following HTTP error codes are used by the consumer API.
