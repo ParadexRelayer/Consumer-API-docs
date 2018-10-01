@@ -23,10 +23,14 @@ For mainnet, use the following base url:
 
 https://api.paradex.io/consumer
 
+You can request an API key at `https://paradex.io/developers`
+
 ### kovan
 For kovan, use:
 
 https://kovan-api.paradex.io/consumer
+
+You can request an API key at `https://kovan.paradex.io/developers`
 
 ## Sending Requests
 
@@ -196,6 +200,7 @@ Aside from HTTP 200 responses the following HTTP error codes are used by the con
 
 - All requests and responses are of **application/json** content type
 - All addresses are sent as lower-case (non-checksummed) Ethereum addresses with the `0x` prefix.
+- Before you can use your API key, you must first prove you own the ethereum address by registering it with the `/verifyAddress` endpoint.
 
 
 # Paradex Consumer API
@@ -210,6 +215,17 @@ Returns your current nonce:
     nonce: 0
 }
 ```
+
+
+## GET /v0/verifyAddress
+`private endpoint`
+
+Proves that you are control the private key associated with the API key that you requested. You only need to call this once.
+
+```
+{ "success": true }
+```
+
 
 ## GET /v0/expirations
 `public endpoint`
