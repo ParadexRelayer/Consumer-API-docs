@@ -1,3 +1,5 @@
+# Note: This API is now deprecated. For documentation on the new API, please see see https://developers.paradex.io
+
 # Paradex Consumer API
 
 ## Contents
